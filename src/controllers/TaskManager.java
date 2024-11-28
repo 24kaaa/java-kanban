@@ -1,10 +1,17 @@
+package controllers;
+
+import model.Epic;
+import model.Status;
+import model.Subtask;
+import model.Task;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class TaskManager {
-    HashMap<Integer, Task> tasks = new HashMap<>();
-    HashMap<Integer, Epic> epics = new HashMap<>();
-    HashMap<Integer, Subtask> subtasks = new HashMap<>();
+    private HashMap<Integer, Task> tasks = new HashMap<>();
+    private HashMap<Integer, Epic> epics = new HashMap<>();
+    private HashMap<Integer, Subtask> subtasks = new HashMap<>();
     private int nextId = 1;
 
     public void add(Task task) {
@@ -41,6 +48,10 @@ public class TaskManager {
     public void update(Subtask subtask) {
         if (subtasks.containsKey(subtask.getId())) {
             subtasks.put(subtask.getId(), subtask);
+            Epic epic = epics.get(subtask.getEpicId());
+            if (epic != null) {
+                updateEpicStatus(epic);
+            }
         }
     }
 
@@ -49,11 +60,21 @@ public class TaskManager {
     }
 
     public void delete(Epic epic) {
+        ArrayList<Integer> subtaskIds = epic.subtaskIds;
+        for (int subtaskId : subtaskIds) {
+            subtasks.remove(subtaskId);
+        }
         epics.remove(epic.getId());
     }
 
     public void delete(Subtask subtask) {
         subtasks.remove(subtask.getId());
+        int epicId = subtask.getEpicId();
+        Epic epic = epics.get(epicId);
+        if (epic != null) {
+            epic.subtaskIds.remove(Integer.valueOf(subtask.getId()));
+            updateEpicStatus(epic);
+        }
     }
 
     public void updateEpicStatus(Epic epic) {
@@ -103,9 +124,19 @@ public class TaskManager {
         tasks.clear();
     }
     public void deleteAllSubtasks() {
+        for (Epic epic : epics.values()) {
+            epic.subtaskIds.clear();
+            epic.setStatus(Status.NEW);
+        }
         subtasks.clear();
     }
     public void deleteAllEpics() {
+        for (Epic epic : epics.values()) {
+            for (Integer subtaskId : epic.subtaskIds) {
+                subtasks.remove(subtaskId);
+            }
+        }
+        subtasks.clear();
         epics.clear();
     }
 
