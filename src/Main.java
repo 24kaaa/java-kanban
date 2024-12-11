@@ -3,11 +3,12 @@ import model.Epic;
 import model.Status;
 import model.Subtask;
 import model.Task;
+import controllers.Managers;
 
 public class Main {
 
     public static void main(String[] args) {
-        TaskManager taskManager = new TaskManager();
+        TaskManager taskManager = Managers.getDefault();
 
         Task task1 = new Task("Задача 1", Status.NEW, "Описание задачи 1");
         Task task2 = new Task("Задача 2", Status.NEW, "Описание задачи 2");
