@@ -1,9 +1,10 @@
-package managertests;
+package mangertests;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import controllers.Managers;
 import model.Status;
-import controllers.InMemoryHistoryManager;
+import controllers.HistoryManager;
 import controllers.TaskManager;
 import model.Epic;
 import model.Subtask;
@@ -12,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryHistoryManagerTest {
     private TaskManager taskManager;
-    private InMemoryHistoryManager imhm;
+    private HistoryManager imhm;
 
     @BeforeEach
     public void setUp() {

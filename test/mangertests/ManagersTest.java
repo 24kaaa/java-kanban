@@ -1,8 +1,8 @@
-package managertests;
+package mangertests;
 import controllers.Managers;
 import org.junit.jupiter.api.Test;
 import controllers.TaskManager;
-import controllers.InMemoryHistoryManager;
+import controllers.HistoryManager;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ManagersTest {
@@ -17,8 +17,8 @@ class ManagersTest {
 
     @Test
     void getDefaultHistory_returnsInitializedHistoryManager() {
-        InMemoryHistoryManager manager1 = Managers.getDefaultHistory();
-        InMemoryHistoryManager manager2 = Managers.getDefaultHistory();
+        HistoryManager manager1 = Managers.getDefaultHistory();
+        HistoryManager manager2 = Managers.getDefaultHistory();
         assertNotNull(manager1);
         assertNotNull(manager2);
         assertNotEquals(manager1, manager2);
