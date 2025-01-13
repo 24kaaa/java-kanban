@@ -1,14 +1,11 @@
-package mangertests;
+package controllers;
 
 import model.Status;
 import model.Epic;
-import model.Subtask;
 import model.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import controllers.HistoryManager;
-import controllers.Managers;
-import controllers.TaskManager;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;

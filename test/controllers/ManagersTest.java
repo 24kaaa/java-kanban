@@ -1,8 +1,6 @@
-package mangertests;
-import controllers.Managers;
+package controllers;
 import org.junit.jupiter.api.Test;
-import controllers.TaskManager;
-import controllers.HistoryManager;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ManagersTest {

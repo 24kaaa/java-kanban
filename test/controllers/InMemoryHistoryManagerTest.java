@@ -1,7 +1,5 @@
-package mangertests;
+package controllers;
 
-import controllers.HistoryManager;
-import controllers.Managers;
 import model.Status;
 import model.Epic;
 import model.Subtask;
