@@ -2,6 +2,7 @@ package model;
 
 import java.util.Objects;
 
+
 public class Task {
     private String nameTask;
     private Status status;
@@ -12,6 +13,13 @@ public class Task {
         this.nameTask = nameTask;
         this.status = status;
         this.description = description;
+    }
+
+    public Task(String nameTask, String description, int id, Status status) {
+        this.nameTask = nameTask;
+        this.description = description;
+        this.id = id;
+        this.status = status;
     }
 
     public String getNameTask() {
