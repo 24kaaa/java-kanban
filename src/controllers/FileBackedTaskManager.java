@@ -5,7 +5,7 @@ import model.Subtask;
 import model.Task;
 import model.Status;
 import java.io.*;
-
+import exceptions.ManagerSaveException;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
@@ -69,6 +69,24 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
+    @Override
+    public void deleteAllTasks() {
+        super.deleteAllTasks();
+        save();
+    }
+
+    @Override
+    public void deleteAllSubtasks() {
+        super.deleteAllSubtasks();
+        save();
+    }
+
+    @Override
+    public void deleteAllEpics() {
+        super.deleteAllEpics();
+        save();
+    }
+
     public void save() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 
@@ -87,7 +105,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 writer.newLine();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ManagerSaveException("Возникла ошибка при автосохранении менеджера", file);
         }
     }
 
@@ -146,7 +164,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ManagerSaveException("Возникла ошибка при загрузке данных из файла", file);
         }
     }
 }
