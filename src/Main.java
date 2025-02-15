@@ -13,10 +13,10 @@ public class Main {
     public static void main(String[] args) {
         TaskManager taskManager = Managers.getDefault();
 
-        Task task1 = new Task("Задача 1", Status.NEW, "Описание задачи 1",LocalDateTime.now()
-                , Duration.ofMinutes(30));
-        Task task2 = new Task("Задача 2", Status.NEW, "Описание задачи 2",LocalDateTime.now()
-                , Duration.ofMinutes(30));
+        Task task1 = new Task("Задача 1", Status.NEW, "Описание задачи 1",LocalDateTime.now(),
+                 Duration.ofMinutes(30));
+        Task task2 = new Task("Задача 2", Status.NEW, "Описание задачи 2",LocalDateTime.now(),
+                 Duration.ofMinutes(30));
 
         taskManager.add(task1);
         taskManager.add(task2);
