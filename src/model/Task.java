@@ -64,18 +64,23 @@ public class Task {
     public Duration getDuration() {
         return duration;
     }
+
     public void setDuration(Duration duration) {
         this.duration = duration;
     }
+
     public LocalDateTime getStartTime() {
         return startTime;
     }
+
     public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
     }
+
     public LocalDateTime getEndTime() {
         return startTime.plus(duration);
     }
+
     public TaskType getType() {
         return TaskType.TASK;
     }
