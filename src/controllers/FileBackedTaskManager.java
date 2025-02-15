@@ -6,13 +6,19 @@ import model.Task;
 import model.Status;
 import java.io.*;
 import exceptions.ManagerSaveException;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import model.TaskType;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
 
     public FileBackedTaskManager(File file) {
         this.file = file;
-        loadFromFile();
     }
 
     @Override
@@ -87,84 +93,91 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
-    public void save() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-
+    private void save() {
+        List<String> lines = new ArrayList<>();
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, StandardCharsets.UTF_8))) {
+            writer.write("id, type, name, status, description, startTime, duration, epic" + "\n");
             for (Task task : getAllTasks()) {
-                writer.write(task.toString());
-                writer.newLine();
+                writer.write(toString(task) + "\n");
             }
-
             for (Epic epic : getAllEpics()) {
-                writer.write(epic.toString());
-                writer.newLine();
+                writer.write(toString(epic) + "\n");
+            }
+            for (Subtask subtask : getAllSubtasks()) {
+                writer.write(toString(subtask) + "\n");
             }
 
-            for (Subtask subtask : getAllSubtasks()) {
-                writer.write(subtask.toString());
-                writer.newLine();
-            }
         } catch (IOException e) {
-            throw new ManagerSaveException("Возникла ошибка при автосохранении менеджера", file);
+            throw new ManagerSaveException("Произошла ошибка при сохранении данных в файл");
         }
     }
 
-    protected void loadFromFile() {
-        if (!file.exists() || file.length() == 0) {
-            return;
+    private static String toString(Task task) {
+        String[] toJoin = {
+                Integer.toString(task.getId()),
+                task.getType().toString(),
+                task.getNameTask(),
+                task.getStatus().toString(),
+                task.getDescription(),
+                task.getStartTime().toString(),
+                task.getDuration().toString()
+        };
+        return String.join(",", toJoin);
+    }
+
+    private static Task fromString(String value) {
+        String[] parts = value.split(",");
+        try {
+            int id = Integer.parseInt(parts[0]);
+            TaskType type = TaskType.valueOf(parts[1]);
+            String name = parts[2];
+            Status status = Status.valueOf(parts[3]);
+            String description = parts[4];
+            LocalDateTime startTime = null;
+            if (!parts[5].equals("null")) {
+                try {
+                    startTime = LocalDateTime.parse(parts[5]);
+                } catch (java.time.format.DateTimeParseException e) {
+                    throw new ManagerSaveException("Ошибка при парсинге даты");
+                }
+            }
+            Duration duration = Duration.ofMinutes(Long.parseLong(parts[6]));
+
+            if (type.equals(TaskType.TASK)) {
+                return new Task(name, description, id, status, startTime, duration);
+
+            } else if (type.equals(TaskType.EPIC)) {
+                return new Epic(name, description, id, status, startTime, duration);
+
+            } else {
+                int epicId = Integer.parseInt(parts[7]);
+                return new Subtask(name, description, epicId, status, startTime, duration);
+            }
+        } catch (Exception e) {
+            throw new ManagerSaveException("Ошибка при парсинге строки");
         }
+    }
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length > 0) {
-                    try {
-                        switch (parts[0]) {
-                            case "TASK":
-                                if (parts.length == 5) {
-                                    String name = parts[1];
-                                    String description = parts[2];
-                                    int id = Integer.parseInt(parts[3]);
-                                    Status status = Status.valueOf(parts[4]);
 
-                                    Task task = new Task(name, status, description);
-                                    task.setId(id);
-                                    add(task);
-                                }
-                                break;
-                            case "EPIC":
-                                if (parts.length >= 4) {
-                                    Epic epic = new Epic(parts[2], parts[3]);
-                                    epic.setId(Integer.parseInt(parts[1]));
-                                    add(epic);
-                                }
-                                break;
-                            case "SUBTASK":
-                                if (parts.length == 6) {
-                                    int subtaskId = Integer.parseInt(parts[1]);
-                                    String subtaskName = parts[2];
-                                    int epicId = Integer.parseInt(parts[5]);
-                                    Status subtaskStatus = Status.valueOf(parts[4]);
-                                    String subtaskDescription = parts[3];
-
-                                    Subtask subtask = new Subtask(subtaskName, subtaskDescription, epicId, subtaskStatus);
-                                    subtask.setId(subtaskId);
-                                    add(subtask);
-                                }
-                                break;
-                            default:
-                                System.out.println("Неизвестный тип: " + parts[0]);
-                        }
-                    } catch (NumberFormatException e) {
-                        System.err.println("Ошибка преобразования числа: " + e.getMessage());
-                    } catch (IllegalArgumentException e) {
-                        System.err.println("Ошибка значения: " + e.getMessage());
+    public static FileBackedTaskManager loadFromFile(File file) {
+        FileBackedTaskManager taskManager = new FileBackedTaskManager(file);
+        try (BufferedReader reader = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8))) {
+            String line = reader.readLine();
+            int maxId = 1;
+            while (reader.ready()) {
+                line = reader.readLine();
+                Task task = fromString(line);
+                if (task != null) {
+                    taskManager.loadTask(task);
+                    if (task.getId() > maxId) {
+                        maxId = task.getId();
                     }
                 }
             }
+            taskManager.setNextId(maxId + 1);
         } catch (IOException e) {
-            throw new ManagerSaveException("Возникла ошибка при загрузке данных из файла", file);
+            throw new ManagerSaveException("Произошла ошибка во время загрузки из файла");
         }
+        return taskManager;
     }
 }

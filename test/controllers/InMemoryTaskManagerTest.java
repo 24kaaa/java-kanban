@@ -1,43 +1,126 @@
 package controllers;
 
+import exceptions.ManagerValidateException;
 import model.Status;
 import model.Epic;
 import model.Task;
-import org.junit.jupiter.api.BeforeEach;
+import model.Subtask;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class InMemoryTaskManagerTest {
-    private TaskManager taskManager;
-    private Task task1;
-    private Task task2;
-    private Epic epic1;
-    private Epic epic2;
-
-    @BeforeEach
-    void setUp() {
-        taskManager = Managers.getDefault();
-        task1 = new Task("Задача 1", Status.NEW, "Описание задачи 1");
-        task2 = new Task("Задача 2", Status.NEW, "Описание задачи 2");
-        epic1 = new Epic("Эпик 1", "Описание эпика 1");
-        epic2 = new Epic("Эпик 2", "Описание эпика 2");
+public class InMemoryTaskManagerTest  extends TaskManagerTest<InMemoryTaskManager> {
+    @Override
+    public InMemoryTaskManager createTaskManager() {
+        return new InMemoryTaskManager();
     }
 
     @Test
-    void shouldRemoveAllTasksAndRemoveFromHistory() {
-        taskManager.add(task1);
+    void shouldEpicStatusBeInProgress() {
+        Epic epic = new Epic("Epic Title", "Epic Description",LocalDateTime.now(),
+                Duration.ofMinutes(30));
+        taskManager.add(epic);
+
+        Subtask subtask1 = new Subtask("Subtask 1", "Description", epic.getId(), Status.IN_PROGRESS,LocalDateTime.now(), Duration.ofMinutes(30));
+        Subtask subtask2 = new Subtask("Subtask 2", "Description", epic.getId(), Status.DONE,  LocalDateTime.now().plus(Duration.ofMinutes(30)), Duration.ofMinutes(30));
+
+        taskManager.add(subtask1);
+        taskManager.add(subtask2);
+
+        taskManager.updateEpicStatus(epic);
+
+        assertEquals(Status.IN_PROGRESS, epic.getStatus());
+    }
+
+    @Test
+    void shouldEpicStatusBeDone() {
+        Epic epic = new Epic("Epic Title", "Epic Description",LocalDateTime.now(),
+                Duration.ofMinutes(30));
+        taskManager.add(epic);
+
+        Subtask subtask1 = new Subtask("Subtask 1", "Description", epic.getId(), Status.DONE,LocalDateTime.now(), Duration.ofMinutes(30));
+        Subtask subtask2 = new Subtask("Subtask 2", "Description", epic.getId(), Status.DONE,LocalDateTime.now().plus(Duration.ofMinutes(30)), Duration.ofMinutes(30));
+
+        taskManager.add(subtask1);
+        taskManager.add(subtask2);
+
+        taskManager.updateEpicStatus(epic);
+
+        assertEquals(Status.DONE, epic.getStatus());
+    }
+
+    @Test
+    void shouldAddPrioritizedTaskWhenNoIntersections() {
+        Task task = new Task(
+                "Test task",
+                Status.NEW,
+                "Test task description",
+                LocalDateTime.of(2024, Month.MARCH, 27, 10, 0),
+                Duration.ofMinutes(30));
+        assertDoesNotThrow(() -> taskManager.addPrioritizedTask(task));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAddingIntersectingTask() {
+        Task task = new Task("Test task",
+                Status.NEW,
+                "Test task description 1",
+                LocalDateTime.of(2024, Month.MARCH, 27, 10, 0),
+                Duration.ofMinutes(30));
+        taskManager.add(task);
+        Task task2 = new Task("Test task 2",
+                Status.NEW,
+                "Test task description 2",
+                LocalDateTime.of(2024, Month.MARCH, 27, 10, 15),
+                Duration.ofMinutes(30));
+        assertThrows(ManagerValidateException.class, () -> taskManager.addPrioritizedTask(task2));
+    }
+
+    @Test
+    void shouldReturnPrioritizedTasksInCorrectOrder() {
+        Task task = new Task("Test task",
+                Status.NEW,
+                "Test description task",
+                LocalDateTime.of(2024, Month.MARCH, 27, 10, 0),
+                Duration.ofMinutes(30));
+        Task task2 = new Task("Test task task 2",
+                Status.NEW,
+                "description 2",
+                LocalDateTime.of(2024, Month.MARCH, 27, 9, 0),
+                Duration.ofMinutes(30));
+        taskManager.add(task);
         taskManager.add(task2);
-        taskManager.getTaskById(task1.getId());
-        taskManager.getTaskById(task2.getId());
-        taskManager.deleteAllTasks();
 
-        List<Task> tasks = taskManager.getAllTasks();
-        List<Task> historyTasks = taskManager.getHistory();
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
 
-        assertTrue(tasks.isEmpty(), "Список задач не должен быть пустым");
-        assertTrue(historyTasks.isEmpty(), "История задач не должна быть пустой");
+        assertEquals(2, prioritizedTasks.size());
+        assertEquals(task2, prioritizedTasks.get(0));
+        assertEquals(task, prioritizedTasks.get(1));
+    }
+
+    @Test
+    void shouldNotIncludeTasksWithNullStartTime() {
+        Task task = new Task("Test task",
+                Status.NEW,
+                "Test description 1",
+                null,
+                Duration.ofMinutes(30));
+        Task task2 = new Task("Test task 2",
+                Status.NEW,
+                "Test description 2",
+                LocalDateTime.of(2024, Month.MARCH, 27, 9, 0),
+                Duration.ofMinutes(30));
+        taskManager.add(task);
+        taskManager.add(task2);
+
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertEquals(1, prioritizedTasks.size());
+        assertEquals(task2, prioritizedTasks.getFirst());
     }
 }

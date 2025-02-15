@@ -7,6 +7,8 @@ import model.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,14 +25,13 @@ class InMemoryHistoryManagerTest {
 
     @Test
     public void shouldAddAndGetHistory() {
-        Task task1 = new Task("Задача 1","Описание задачи 1", 1, Status.NEW);
-        Epic epic1 = new Epic("Эпик 1", "Описание эпика 1", 2);
-        Subtask subtask1 = new Subtask("Подзадача 1",
-                "Описание подзадачи 1", Status.NEW, "Описание", 2);
+        Task task1 = new Task("Задача 1", "Описание задачи 1", 1, Status.NEW);
+        Epic epic1 = new Epic("Эпик 1", "Описание эпика 1", 2, Status.NEW, LocalDateTime.now(), Duration.ofMinutes(30));
+        Subtask subtask1 = new Subtask("Подзадача 1", "Описание подзадачи 1", 2, Status.NEW, LocalDateTime.now(), Duration.ofMinutes(30));
+
         historyManager.addTask(task1);
         historyManager.addTask(epic1);
         historyManager.addTask(subtask1);
-
 
         List<Task> history = historyManager.getHistory();
 
@@ -43,8 +44,9 @@ class InMemoryHistoryManagerTest {
     @Test
     public void shouldRemoveTaskIfItIsViewedAgain() {
         Task task1 = new Task("Задача 1", "Описание задачи 1", 1, Status.NEW);
-        Epic epic1 = new Epic("Эпик 1", "Описание эпика 1", 2);
-        Subtask subtask1 = new Subtask("Подзадача 1", "Описание подзадачи 1", Status.NEW, "Описание", 2);
+        Epic epic1 = new Epic("Эпик 1", "Описание эпика 1", 2, Status.NEW, LocalDateTime.now(), Duration.ofMinutes(30));
+        Subtask subtask1 = new Subtask("Подзадача 1", "Описание подзадачи 1",2, Status.NEW,
+                LocalDateTime.now(), Duration.ofMinutes(30));
 
         historyManager.addTask(task1);
         historyManager.addTask(epic1);

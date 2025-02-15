@@ -5,23 +5,31 @@ import model.Subtask;
 import model.Task;
 import controllers.Managers;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class Main {
 
     public static void main(String[] args) {
         TaskManager taskManager = Managers.getDefault();
 
-        Task task1 = new Task("Задача 1", Status.NEW, "Описание задачи 1");
-        Task task2 = new Task("Задача 2", Status.NEW, "Описание задачи 2");
+        Task task1 = new Task("Задача 1", Status.NEW, "Описание задачи 1",LocalDateTime.now()
+                , Duration.ofMinutes(30));
+        Task task2 = new Task("Задача 2", Status.NEW, "Описание задачи 2",LocalDateTime.now()
+                , Duration.ofMinutes(30));
 
         taskManager.add(task1);
         taskManager.add(task2);
 
         Subtask subtask1 = new Subtask("Подзадача 1",
-                "Описание подзадачи 1", Status.NEW, "Описание", 0);
+                "Описание подзадачи 1",0, Status.NEW,
+                LocalDateTime.now(), Duration.ofMinutes(30));
         Subtask subtask2 = new Subtask("Подзадача 2",
-                "Описание подзадачи 2", Status.NEW, "Описание", 0);
+                "Описание подзадачи 2", 0, Status.NEW,
+                LocalDateTime.now(), Duration.ofMinutes(30));
 
-        Epic epic1 = new Epic("Эпик 1", "Описание эпика 1");
+        Epic epic1 = new Epic("Эпик 1", "Описание эпика 1",LocalDateTime.now(),
+                Duration.ofMinutes(30));
         taskManager.add(epic1);
         subtask1.setEpicId(epic1.getId());
         subtask2.setEpicId(epic1.getId());
@@ -31,8 +39,10 @@ public class Main {
         taskManager.updateEpicStatus(epic1);
 
         Subtask subtask3 = new Subtask("Подзадача 3", "Описание подзадачи 3",
-                Status.NEW, "Описание", 0);
-        Epic epic2 = new Epic("Эпик 2", "Описание эпика 2");
+                0, Status.NEW,
+                LocalDateTime.now(), Duration.ofMinutes(30));
+        Epic epic2 = new Epic("Эпик 2", "Описание эпика 2",LocalDateTime.now(),
+                Duration.ofMinutes(30));
         taskManager.add(epic2);
         subtask3.setEpicId(epic2.getId());
         taskManager.add(subtask3);

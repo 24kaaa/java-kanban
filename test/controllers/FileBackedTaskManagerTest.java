@@ -1,78 +1,64 @@
 package controllers;
 
-import model.Epic;
-import model.Subtask;
-import model.Task;
-import model.Status;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import exceptions.ManagerSaveException;
 import org.junit.jupiter.api.Test;
+import model.Task;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class FileBackedTaskManagerTest {
-    private FileBackedTaskManager taskManager;
-    private final String testFilePath = "test_tasks.csv";
 
-    @BeforeEach
-    void setUp() {
-        taskManager = new FileBackedTaskManager(new File(testFilePath));
-    }
 
-    @AfterEach
-    void tearDown() throws IOException {
-        Files.deleteIfExists(Paths.get(testFilePath));
+class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
+
+    @Override
+    public FileBackedTaskManager createTaskManager() {
+        return new FileBackedTaskManager(new File("test.csv"));
     }
 
     @Test
-    void testAddAndSaveTasks() {
-        Task task1 = new Task("Task 1", Status.NEW, "Description 1");
-        task1.setId(1);
-        taskManager.add(task1);
-
-        Epic epic1 = new Epic("Epic 1", "Epic Description 1");
-        epic1.setId(2);
-        taskManager.add(epic1);
-
-        Subtask subtask1 = new Subtask("Subtask 1", "Subtask Description 1", 2, Status.NEW);
-        subtask1.setId(3);
-        taskManager.add(subtask1);
-
-        taskManager.save();
-
-        FileBackedTaskManager newTaskManager = new FileBackedTaskManager(new File(testFilePath));
-
-        assertEquals(1, newTaskManager.getAllTasks().size());
-        assertEquals("Task 1", newTaskManager.getAllTasks().get(0).getNameTask());
-        assertEquals(Status.NEW, newTaskManager.getAllTasks().get(0).getStatus());
-
-        assertEquals(1, newTaskManager.getAllEpics().size());
-        assertEquals("Epic 1", newTaskManager.getAllEpics().get(0).getNameTask());
-
-        assertEquals(1, newTaskManager.getAllSubtasks().size());
-        assertEquals("Subtask 1", newTaskManager.getAllSubtasks().get(0).getNameTask());
+    void shouldThrowExceptionWhenFileNotExists() {
+        File file = new File("nonexistent_file.csv");
+        FileBackedTaskManager taskManager = new FileBackedTaskManager(file);
+        assertThrows(ManagerSaveException.class, () -> taskManager.loadFromFile(file));
     }
 
     @Test
-    void testLoadFromFileWithEmptyFile() {
-        FileBackedTaskManager newTaskManager = new FileBackedTaskManager(new File(testFilePath));
-
-        assertEquals(0, newTaskManager.getAllTasks().size());
-        assertEquals(0, newTaskManager.getAllEpics().size());
-        assertEquals(0, newTaskManager.getAllSubtasks().size());
+    void shouldThrowExceptionWhenFileHasIncorrectData() throws IOException {
+        File file = new File("incorrect_data.csv");
+        Files.write(Paths.get(file.getPath()), "id,type,name,status,description\n1,TASK,Test task,NEW,Test task description,incorrect_date".getBytes());
+        FileBackedTaskManager taskManager = new FileBackedTaskManager(file);
+        assertThrows(ManagerSaveException.class, () -> taskManager.loadFromFile(file));
+        Files.delete(Paths.get(file.getPath()));
     }
 
-    @Test
-    void testLoadFromFileWithNonExistentFile() {
-        FileBackedTaskManager newTaskManager = new FileBackedTaskManager(new File("non_existent_file.csv"));
 
-        assertEquals(0, newTaskManager.getAllTasks().size());
-        assertEquals(0, newTaskManager.getAllEpics().size());
-        assertEquals(0, newTaskManager.getAllSubtasks().size());
+    @Test
+    void shouldLoadTasksFromFile() throws IOException {
+        File file = new File("test_load.csv");
+        String content = """
+                id,type,name,status,description,startTime,duration,epic
+                1,TASK,Test task,NEW,Test task description,2024-03-27T10:00,30,
+                2,EPIC,Test epic,NEW,Test epic description,null,0,
+                3,SUBTASK,Test subtask,NEW,Test subtask description,2024-03-27T10:30,15,2
+                """;
+        Files.write(Paths.get(file.getPath()), content.getBytes());
+
+        FileBackedTaskManager taskManager = FileBackedTaskManager.loadFromFile(file);
+
+        assertEquals(1, taskManager.getAllTasks().size());
+        assertEquals(1, taskManager.getAllEpics().size());
+        assertEquals(1, taskManager.getAllSubtasks().size());
+
+        Task task = taskManager.getTaskById(1);
+        assertEquals("Test task", task.getNameTask());
+
+        Files.delete(Paths.get(file.getPath()));
     }
 }
+
