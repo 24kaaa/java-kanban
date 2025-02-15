@@ -9,6 +9,7 @@ public class ManagerSaveException extends RuntimeException {
         super(message);
         this.file = file;
     }
+
     public ManagerSaveException(String message) {
         super(message);
     }
