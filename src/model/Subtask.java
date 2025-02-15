@@ -12,7 +12,7 @@ public class Subtask extends Task {
         this.epicId = epicId;
     }
 
-    public Subtask(String name, String description, int epicId, Status status, LocalDateTime startTime, Duration duration ) {
+    public Subtask(String name, String description, int epicId, Status status, LocalDateTime startTime, Duration duration) {
         super(name, status, description, startTime, duration);
         this.epicId = epicId;
     }
