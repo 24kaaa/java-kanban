@@ -78,7 +78,8 @@ public class InMemoryTaskManagerTest  extends TaskManagerTest<InMemoryTaskManage
                 "Test task description 2",
                 LocalDateTime.of(2024, Month.MARCH, 27, 10, 15),
                 Duration.ofMinutes(30));
-        assertThrows(ManagerValidateException.class, () -> taskManager.addPrioritizedTask(task2));
+        assertThrows(ManagerValidateException.class, () -> taskManager.add(task2));
+        assertEquals(1, taskManager.getAllTasks().size());
     }
 
     @Test

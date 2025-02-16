@@ -26,6 +26,9 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void add(Task task) {
         task.setId(nextId++);
+        if (task.getStartTime() != null && isValidate(task)) {
+            throw new ManagerValidateException("Задача № " + task.getId() + " пересекается с другими задачами");
+        }
         tasks.put(task.getId(), task);
         addPrioritizedTask(task);
     }
@@ -39,6 +42,9 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void add(Subtask subtask) {
         subtask.setId(nextId++);
+        if (subtask.getStartTime() != null && isValidate(subtask)) {
+            throw new ManagerValidateException("Подзадача № " + subtask.getId() + " пересекается с другими задачами");
+        }
         subtasks.put(subtask.getId(), subtask);
         Epic epic = epics.get(subtask.getEpicId());
         if (epic != null) {
@@ -53,6 +59,9 @@ public class InMemoryTaskManager implements TaskManager {
             tasks.put(task.getId(), task);
         }
         prioritizedTasks.removeIf(t -> t.getId() == task.getId());
+        if (task.getStartTime() != null && isValidate(task)) {
+            throw new ManagerValidateException("Задача № " + task.getId() + " пересекается с другими задачами");
+        }
         addPrioritizedTask(task);
     }
 
@@ -73,6 +82,9 @@ public class InMemoryTaskManager implements TaskManager {
             }
         }
         prioritizedTasks.removeIf(t -> t.getId() == (subtask.getId()));
+        if (subtask.getStartTime() != null && isValidate(subtask)) {
+            throw new ManagerValidateException("Подзадача № " + subtask.getId() + " пересекается с другими задачами");
+        }
         addPrioritizedTask(subtask);
     }
 
